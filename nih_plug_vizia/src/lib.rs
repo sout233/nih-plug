@@ -2,6 +2,7 @@
 
 // See the comment in the main `nih_plug` crate
 #![allow(clippy::type_complexity)]
+#![feature(portable_simd)]
 
 use crossbeam::atomic::AtomicCell;
 use nih_plug::params::persist::PersistentField;

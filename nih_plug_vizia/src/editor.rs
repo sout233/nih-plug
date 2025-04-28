@@ -29,7 +29,7 @@ pub(crate) struct ViziaEditor {
     /// check for new parameter values. This is useful when the parameter value is (indirectly) used
     /// to compute a property in an event handler. Like when positioning an element based on the
     /// display value's width.
-    pub(crate) emit_parameters_changed_event: Arc<AtomicBool>,
+    pub(crate) emit_parameters_changed_event: Arc<AtomicInt>,
 }
 
 impl Editor for ViziaEditor {
