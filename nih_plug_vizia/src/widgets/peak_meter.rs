@@ -6,6 +6,8 @@ use std::time::Duration;
 use std::time::Instant;
 use vizia::prelude::*;
 use vizia::vg;
+use vizia::vg::ColorSpace;
+use vizia::vg::Point;
 
 /// The thickness of a tick inside of the peak meter's bar.
 const TICK_WIDTH: f32 = 1.0;
@@ -115,14 +117,14 @@ impl PeakMeter {
                         .overflow(Overflow::Visible);
 
                         if needs_minus_offset {
-                            label.child_right(Pixels(font_size * 0.15));
+                            label.padding_right(Pixels(font_size * 0.15));
                         }
                     })
                     .height(Stretch(1.0))
                     .left(Percentage(tick_pct - (WIDTH_PCT / 2.0)))
                     .width(Percentage(WIDTH_PCT))
-                    .child_left(Stretch(1.0))
-                    .child_right(Stretch(1.0))
+                    .padding_left(Stretch(1.0))
+                    .padding_right(Stretch(1.0))
                     .overflow(Overflow::Visible);
                 }
             })
@@ -144,7 +146,7 @@ where
     L: Lens<Target = f32>,
     P: Lens<Target = f32>,
 {
-    fn draw(&self, cx: &mut DrawContext, canvas: &mut Canvas) {
+    fn draw(&self, cx: &mut DrawContext, canvas: &vizia::vg::Canvas) {
         let level_dbfs = self.level_dbfs.get(cx);
         let peak_dbfs = self.peak_dbfs.get(cx);
 
@@ -160,9 +162,9 @@ where
         let border_color = cx.border_color();
         let opacity = cx.opacity();
         let mut background_color: vg::Color = background_color.into();
-        background_color.set_alphaf(background_color.a * opacity);
+        background_color.with_a((background_color.a() as f32 * opacity) as u8);
         let mut border_color: vg::Color = border_color.into();
-        border_color.set_alphaf(border_color.a * opacity);
+        border_color.with_a((border_color.a() as f32 * opacity) as u8);
         let border_width = cx.border_width();
 
         let mut path = vg::Path::new();
@@ -171,17 +173,17 @@ where
             let y = bounds.y + border_width / 2.0;
             let w = bounds.w - border_width;
             let h = bounds.h - border_width;
-            path.move_to(x, y);
-            path.line_to(x, y + h);
-            path.line_to(x + w, y + h);
-            path.line_to(x + w, y);
-            path.line_to(x, y);
+            path.move_to(Point::new(x, y));
+            path.line_to(Point::new(x, y + h));
+            path.line_to(Point::new(x + w, y + h));
+            path.line_to(Point::new(x + w, y));
+            path.line_to(Point::new(x, y));
             path.close();
         }
 
         // Fill with background color
-        let paint = vg::Paint::color(background_color);
-        canvas.fill_path(&path, &paint);
+        let paint = vg::Paint::new(background_color, None);
+        canvas.draw_path(&path, &paint);
 
         // And now for the fun stuff. We'll try to not overlap the border, but we'll draw that last
         // just in case.
@@ -205,16 +207,25 @@ where
             // femtovg draws paths centered on these coordinates, so in order to be pixel perfect we
             // need to account for that. Otherwise the ticks will be 2px wide instead of 1px.
             let mut path = vg::Path::new();
-            path.move_to(tick_x as f32 + (dpi_scale / 2.0), bar_bounds.top());
-            path.line_to(tick_x as f32 + (dpi_scale / 2.0), bar_bounds.bottom());
+            path.move_to(Point::new(
+                tick_x as f32 + (dpi_scale / 2.0),
+                bar_bounds.top(),
+            ));
+            path.line_to(Point::new(
+                tick_x as f32 + (dpi_scale / 2.0),
+                bar_bounds.bottom(),
+            ));
 
             let grayscale_color = 0.3 + ((1.0 - tick_fraction) * 0.5);
-            let mut paint = vg::Paint::color(vg::Color::rgbaf(
-                grayscale_color,
-                grayscale_color,
-                grayscale_color,
-                opacity,
-            ));
+            let mut paint = vg::Paint::new(
+                vg::Color::from_argb(
+                    (opacity * 255.0) as u8,
+                    (grayscale_color * 255.0) as u8,
+                    (grayscale_color * 255.0) as u8,
+                    (grayscale_color * 255.0) as u8,
+                ),
+                None,
+            );
             paint.set_line_width(TICK_WIDTH * dpi_scale);
             canvas.stroke_path(&path, &paint);
         }

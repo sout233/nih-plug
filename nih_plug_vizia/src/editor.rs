@@ -6,7 +6,7 @@ use nih_plug::debug::*;
 use nih_plug::prelude::{Editor, GuiContext, ParentWindowHandle};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use vizia::context::backend::TextConfig;
+// use vizia::context::backend::TextConfig;
 use vizia::prelude::*;
 
 use crate::widgets::RawParamEvent;
@@ -29,7 +29,7 @@ pub(crate) struct ViziaEditor {
     /// check for new parameter values. This is useful when the parameter value is (indirectly) used
     /// to compute a property in an event handler. Like when positioning an element based on the
     /// display value's width.
-    pub(crate) emit_parameters_changed_event: Arc<AtomicInt>,
+    pub(crate) emit_parameters_changed_event: Arc<AtomicBool>,
 }
 
 impl Editor for ViziaEditor {
@@ -68,7 +68,8 @@ impl Editor for ViziaEditor {
 
             // And we'll link `WindowEvent::ResizeWindow` and `WindowEvent::SetScale` events to our
             // `ViziaState`. We'll notify the host when any of these change.
-            let current_inner_window_size = cx.window_size();
+            // FIXME: This is a bit of a hack, but...
+            let current_inner_window_size = WindowSize::new(200, 200);
             widgets::WindowModel {
                 context: context.clone(),
                 vizia_state: vizia_state.clone(),
@@ -88,10 +89,10 @@ impl Editor for ViziaEditor {
         )
         .inner_size((unscaled_width, unscaled_height))
         .user_scale_factor(user_scale_factor)
-        .with_text_config(TextConfig {
-            hint: false,
-            subpixel: true,
-        })
+        // .with_text_config(TextConfig {
+        //     hint: false,
+        //     subpixel: true,
+        // })
         .on_idle({
             let emit_parameters_changed_event = self.emit_parameters_changed_event.clone();
             move |cx| {
