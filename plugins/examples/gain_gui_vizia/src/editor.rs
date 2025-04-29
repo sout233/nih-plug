@@ -43,8 +43,7 @@ pub(crate) fn create(
                 // .font_weight(FontWeightKeyword::Thin)
                 .font_size(30.0)
                 .height(Pixels(50.0))
-                .padding_top(Stretch(1.0))
-                .padding_bottom(Pixels(0.0));
+                .alignment(Alignment::Center);
 
             Label::new(cx, "Gain");
             ParamSlider::new(cx, Data::params, |params| &params.gain);
@@ -58,10 +57,8 @@ pub(crate) fn create(
             // This is how adding padding works in vizia
             .top(Pixels(10.0));
         })
-        .gap(Pixels(0.0))
-        .padding_left(Stretch(1.0))
-        .padding_right(Stretch(1.0));
+        .alignment(Alignment::Center);
 
-        ResizeHandle::new(cx);
+        // ResizeHandle::new(cx).alignment(Alignment::BottomRight);
     })
 }

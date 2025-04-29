@@ -69,16 +69,17 @@ impl Editor for ViziaEditor {
             // And we'll link `WindowEvent::ResizeWindow` and `WindowEvent::SetScale` events to our
             // `ViziaState`. We'll notify the host when any of these change.
             // FIXME: This is a bit of a hack, but...
-            let current_inner_window_size = WindowSize::new(200, 200);
-            widgets::WindowModel {
-                context: context.clone(),
-                vizia_state: vizia_state.clone(),
-                last_inner_window_size: AtomicCell::new((
-                    current_inner_window_size.width,
-                    current_inner_window_size.height,
-                )),
-            }
-            .build(cx);
+            // let current_inner_window_size = WindowSize::new(200, 200);
+            // let current_inner_window_size = cx.cache.get_bounds(Entity::root());
+            // widgets::WindowModel {
+            //     context: context.clone(),
+            //     vizia_state: vizia_state.clone(),
+            //     last_inner_window_size: AtomicCell::new((
+            //         current_inner_window_size.width,
+            //         current_inner_window_size.height,
+            //     )),
+            // }
+            // .build(cx);
 
             app(cx, context.clone())
         })

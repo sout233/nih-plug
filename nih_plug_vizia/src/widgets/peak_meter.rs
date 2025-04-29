@@ -163,9 +163,9 @@ where
         let border_color = cx.border_color();
         let opacity = cx.opacity();
         let mut background_color: vg::Color = background_color.into();
-        background_color.with_a((background_color.a() as f32 * opacity) as u8);
+        background_color= background_color.with_a((background_color.a() as f32 * opacity) as u8);
         let mut border_color: vg::Color = border_color.into();
-        border_color.with_a((border_color.a() as f32 * opacity) as u8);
+        border_color =  border_color.with_a((border_color.a() as f32 * opacity) as u8);
         let border_width = cx.border_width();
 
         let mut path = vg::Path::new();
@@ -184,7 +184,8 @@ where
 
         // Fill with background color
         let color4f = Color4f::from(background_color);
-        let paint = vg::Paint::new(color4f, None);
+        let mut paint = vg::Paint::new(color4f, None);
+        paint.set_style(vg::PaintStyle::Stroke);
         canvas.draw_path(&path, &paint);
 
         // And now for the fun stuff. We'll try to not overlap the border, but we'll draw that last
@@ -220,14 +221,16 @@ where
 
             let grayscale_color = 0.3 + ((1.0 - tick_fraction) * 0.5);
             let mut paint = vg::Paint::new(
-                Color4f::from(vg::Color::from_argb(
-                    (opacity * 255.0) as u8,
-                    (grayscale_color * 255.0) as u8,
-                    (grayscale_color * 255.0) as u8,
-                    (grayscale_color * 255.0) as u8,
-                )),
+                // Color4f::from(vg::Color::from_argb(
+                //     (opacity * 255.0) as u8,
+                //     (grayscale_color * 255.0) as u8,
+                //     (grayscale_color * 255.0) as u8,
+                //     (grayscale_color * 255.0) as u8,
+                // )),
+                Color4f::from(Color::gray()),
                 None,
             );
+        paint.set_style(vg::PaintStyle::Stroke);
             paint.set_stroke_width(TICK_WIDTH * dpi_scale);
             canvas.draw_path(&path, &paint);
         }
@@ -247,15 +250,18 @@ where
             path.line_to(Point::new(peak_x + (dpi_scale / 2.0), bar_bounds.bottom()));
 
             let mut paint = vg::Paint::new(
-                Color4f::from(vg::Color::from_argb(77, 77, 77, (opacity * 255.0) as u8)), // rgbf 0.3 0.3 0.3
+                // Color4f::from(vg::Color::from_argb(77, 77, 77, (opacity * 255.0) as u8)), // rgbf 0.3 0.3 0.3
+                Color4f::from(Color::blue()),
                 None,
             ); 
+            paint.set_style(vg::PaintStyle::Stroke);
             paint.set_stroke_width(TICK_WIDTH * dpi_scale);
             canvas.draw_path(&path, &paint);
         }
 
         // Draw border last
         let mut paint = vg::Paint::new(Color4f::from(border_color), None);
+        paint.set_style(vg::PaintStyle::Stroke);
         paint.set_stroke_width(border_width);
         canvas.draw_path(&path, &paint);
     }
