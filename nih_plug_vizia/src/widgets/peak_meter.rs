@@ -6,6 +6,7 @@ use std::time::Duration;
 use std::time::Instant;
 use vizia::prelude::*;
 use vizia::vg;
+use vizia::vg::Color4f;
 use vizia::vg::ColorSpace;
 use vizia::vg::Point;
 
@@ -182,7 +183,8 @@ where
         }
 
         // Fill with background color
-        let paint = vg::Paint::new(background_color, None);
+        let color4f = Color4f::from(background_color);
+        let paint = vg::Paint::new(color4f, None);
         canvas.draw_path(&path, &paint);
 
         // And now for the fun stuff. We'll try to not overlap the border, but we'll draw that last
@@ -218,16 +220,16 @@ where
 
             let grayscale_color = 0.3 + ((1.0 - tick_fraction) * 0.5);
             let mut paint = vg::Paint::new(
-                vg::Color::from_argb(
+                Color4f::from(vg::Color::from_argb(
                     (opacity * 255.0) as u8,
                     (grayscale_color * 255.0) as u8,
                     (grayscale_color * 255.0) as u8,
                     (grayscale_color * 255.0) as u8,
-                ),
+                )),
                 None,
             );
-            paint.set_line_width(TICK_WIDTH * dpi_scale);
-            canvas.stroke_path(&path, &paint);
+            paint.set_stroke_width(TICK_WIDTH * dpi_scale);
+            canvas.draw_path(&path, &paint);
         }
 
         // Draw the hold peak value if the hold time option has been set
@@ -241,17 +243,20 @@ where
             // need to account for that. Otherwise the ticks will be 2px wide instead of 1px.
             let peak_x = db_to_x_coord(peak_dbfs);
             let mut path = vg::Path::new();
-            path.move_to(peak_x + (dpi_scale / 2.0), bar_bounds.top());
-            path.line_to(peak_x + (dpi_scale / 2.0), bar_bounds.bottom());
+            path.move_to(Point::new(peak_x + (dpi_scale / 2.0), bar_bounds.top()));
+            path.line_to(Point::new(peak_x + (dpi_scale / 2.0), bar_bounds.bottom()));
 
-            let mut paint = vg::Paint::color(vg::Color::rgbaf(0.3, 0.3, 0.3, opacity));
-            paint.set_line_width(TICK_WIDTH * dpi_scale);
-            canvas.stroke_path(&path, &paint);
+            let mut paint = vg::Paint::new(
+                Color4f::from(vg::Color::from_argb(77, 77, 77, (opacity * 255.0) as u8)), // rgbf 0.3 0.3 0.3
+                None,
+            ); 
+            paint.set_stroke_width(TICK_WIDTH * dpi_scale);
+            canvas.draw_path(&path, &paint);
         }
 
         // Draw border last
-        let mut paint = vg::Paint::color(border_color);
-        paint.set_line_width(border_width);
-        canvas.stroke_path(&path, &paint);
+        let mut paint = vg::Paint::new(Color4f::from(border_color), None);
+        paint.set_stroke_width(border_width);
+        canvas.draw_path(&path, &paint);
     }
 }

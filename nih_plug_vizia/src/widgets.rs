@@ -151,7 +151,11 @@ impl Model for WindowModel {
                 // This will trigger a `WindowEvent::GeometryChanged`, which in turn causes the
                 // handler below this to be fired
                 let (width, height) = self.vizia_state.inner_logical_size();
-                cx.set_window_size(WindowSize { width, height });
+                // cx.set_window_size(WindowSize { width, height });
+                cx.set_transform(Transform::Scale((
+                    (width as f32).into(),
+                    (height as f32).into(),
+                )));
 
                 meta.consume();
             }
@@ -160,7 +164,9 @@ impl Model for WindowModel {
         // This gets fired whenever the inner window gets resized
         event.map(|window_event, _| {
             if let WindowEvent::GeometryChanged { .. } = window_event {
-                let logical_size = (cx.window_size().width, cx.window_size().height);
+                let width = cx.cache.get_bounds(Entity::root()).w as u32;
+                let height = cx.cache.get_bounds(Entity::root()).h as u32;
+                let logical_size = (width, height);
                 // `self.vizia_state.inner_logical_size()` should match `logical_size`. Since it's
                 // computed we need to store the last logical size on this object.
                 nih_debug_assert_eq!(
@@ -171,8 +177,9 @@ impl Model for WindowModel {
                 );
                 let old_logical_size @ (old_logical_width, old_logical_height) =
                     self.last_inner_window_size.load();
-                let scale_factor = cx.user_scale_factor();
-                let old_user_scale_factor = self.vizia_state.scale_factor.load();
+                // let scale_factor = cx.user_scale_factor();
+                let scale_factor = cx.scale_factor() as f32;
+                let old_user_scale_factor = self.vizia_state.scale_factor.load() as f32;
 
                 // Don't do anything if the current size already matches the new size, this could
                 // otherwise also cause a feedback loop on resize failure
@@ -183,18 +190,21 @@ impl Model for WindowModel {
                 // Our embedded baseview window will have already been resized. If the host does not
                 // accept our new size, then we'll try to undo that
                 self.last_inner_window_size.store(logical_size);
-                self.vizia_state.scale_factor.store(scale_factor);
+                self.vizia_state.scale_factor.store(scale_factor as f64);
                 if !self.context.request_resize() {
                     self.last_inner_window_size.store(old_logical_size);
-                    self.vizia_state.scale_factor.store(old_user_scale_factor);
+                    self.vizia_state.scale_factor.store(old_user_scale_factor as f64);
 
                     // This will cause the window's size to be reverted on the next event loop
                     // NOTE: Is resizing back the correct behavior now that the size is computed?
-                    cx.set_window_size(WindowSize {
-                        width: old_logical_width,
-                        height: old_logical_height,
-                    });
-                    cx.set_user_scale_factor(old_user_scale_factor);
+                    // cx.set_window_size(WindowSize {
+                    //     width: old_logical_width,
+                    //     height: old_logical_height,
+                    // });
+                    // cx.set_user_scale_factor(old_user_scale_factor);
+                    cx.cache.set_height(Entity::root(), old_logical_height as f32);
+                    cx.cache.set_width(Entity::root(), old_logical_width as f32);
+                    // TODO: impl `set_user_scale_factor()`
                 }
             }
         });
